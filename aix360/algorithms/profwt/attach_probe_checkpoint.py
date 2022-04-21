@@ -14,7 +14,7 @@ def print_layer_labels(checkpoint_path):
 	Parameters:
 	checkpoint_path (string): Path to the checkpoint filename where the tensorflow checkpoint is stored.
 	"""
-	g= tf.train.import_meta_graph(checkpoint_path+'.meta')
+	g = tf.train.import_meta_graph(f'{checkpoint_path}.meta')
 	graph = tf.get_default_graph()
 	print(graph.get_operations())
 	tf.reset_default_graph()
@@ -39,7 +39,7 @@ def attach_probe_eval(input_features_name,label_name,operation_name,x_train2,y_t
 	"""
 
 	# Build the computation graph correpsonding to the trained model from the checkpoint
-	g= tf.train.import_meta_graph(checkpoint_path+'.meta')
+	g = tf.train.import_meta_graph(f'{checkpoint_path}.meta')
 	graph = tf.get_default_graph()
 	# Get the tensor corresponding to the operation
 	a=graph.get_tensor_by_name(operation_name)
@@ -76,7 +76,7 @@ def attach_probe_eval(input_features_name,label_name,operation_name,x_train2,y_t
 	tf.reset_default_graph()
 	#Save the array of flattend probe outputs
 	probe_tensor_val=probe_list
-	assert str(type(probe_tensor_val))=="<class 'numpy.ndarray'>"  
+	assert str(type(probe_tensor_val))=="<class 'numpy.ndarray'>"
 	assert probe_tensor_val.shape[0]==len(x_train2)
 	print('probe shape',probe_tensor_val.shape)
 	return probe_tensor_val

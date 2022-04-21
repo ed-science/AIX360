@@ -97,8 +97,9 @@ class CEM_MAFImageExplainer(LocalWBExplainer):
             adv_img = attack_pn.attack(input_img, target_label, input_latent)
             adv_prob, adv_class, adv_prob_str = self._wbmodel.predict_long(adv_img)
             attr_mod = self.check_attributes_celebA(self._attributes, input_img, adv_img)
-            
-            INFO = "[INFO] Orig class:{}, Adv class:{}, Orig prob:{}, Adv prob:{}".format(orig_class, adv_class, orig_prob_str, adv_prob_str)
+
+            INFO = f"[INFO] Orig class:{orig_class}, Adv class:{adv_class}, Orig prob:{orig_prob_str}, Adv prob:{adv_prob_str}"
+
 
         else: # assume arg_mode is PP
             print("Creating a mask for pertinent positive")
@@ -141,7 +142,10 @@ class CEM_MAFImageExplainer(LocalWBExplainer):
                     working_mask[(0,) + tuple(index) + (0,)] = 1
                 adv_img = working_mask * input_img
                 img_prob, img_class, img_prob_str = self._wbmodel.predict_long(adv_img)
-                print("i:{}, index:{}, value:{}, class:{}".format(i, temp_index, mask_vec[temp_index], img_class))
+                print(
+                    f"i:{i}, index:{temp_index}, value:{mask_vec[temp_index]}, class:{img_class}"
+                )
+
                 if img_class == orig_class:
                     success = True
                     break
@@ -152,7 +156,7 @@ class CEM_MAFImageExplainer(LocalWBExplainer):
         return(adv_img, attr_mod, INFO)
 
       
-    def check_attributes_celebA(self, attributes, x, y): 
+    def check_attributes_celebA(self, attributes, x, y):
         """
         Load attribute classifiers and check which attributes in original image x
         are modified in adversarial image y
@@ -172,13 +176,12 @@ class CEM_MAFImageExplainer(LocalWBExplainer):
         for i in range(len(attributes)):
             attr = attributes[i]
             # load json and create model
-            json_file_name = "../../aix360/models/CEM_MAF/simple_{}_model.json".format(attr)
-            json_file = open(json_file_name, 'r')
-            loaded_model_json = json_file.read()
-            json_file.close()
+            json_file_name = f"../../aix360/models/CEM_MAF/simple_{attr}_model.json"
+            with open(json_file_name, 'r') as json_file:
+                loaded_model_json = json_file.read()
             loaded_model = model_from_json(loaded_model_json)
             # load weights into new model
-            weight_file_name = "../../aix360/models/CEM_MAF/simple_{}_weights.h5".format(attr)
+            weight_file_name = f"../../aix360/models/CEM_MAF/simple_{attr}_weights.h5"
             loaded_model.load_weights(weight_file_name)
 
             orig_attr_score[i] = loaded_model.predict(x)[0]
@@ -215,16 +218,14 @@ class CEM_MAFImageExplainer(LocalWBExplainer):
 
         changes_abs = adv_attr_score - orig_attr_score
         changes = np.zeros((len(attributes),1))
-        res = ""
         for i in range(len(attributes)):
             if changes_abs[i] >= thresh_pos[i]:
                 changes[i] = 1
             elif changes_abs[i] <= thresh_neg[i]:
                 changes[i] = -1
         added = np.where(changes == 1)[0]
-        for j in range(len(added)):
-            res += "Added " + attributes[added[j]] + ","
+        res = "".join(f"Added {attributes[added[j]]}," for j in range(len(added)))
         removed = np.where(changes[i] == -1)[0]
         for j in range(len(removed)):
-            res += "Removed " + attributes[removed[j]] + ","
+            res += f"Removed {attributes[removed[j]]},"
         return res[:-1]

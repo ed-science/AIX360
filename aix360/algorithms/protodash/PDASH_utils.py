@@ -198,7 +198,7 @@ def HeuristicSetSelection(X, Y, m, kernelType, sigma):
 
     while sizeS < m:
 
-        remainingElements = np.setdiff1d(allY, S[0:sizeS])
+        remainingElements = np.setdiff1d(allY, S[:sizeS])
 
         newCurrSetValue = currSetValue
         maxGradient = 0
@@ -210,11 +210,7 @@ def HeuristicSetSelection(X, Y, m, kernelType, sigma):
 
             if sizeS == 0:
 
-                if kernelType == 'Gaussian':
-                    K = 1
-                else:
-                    K = np.dot(newZ, newZ)
-
+                K = 1 if kernelType == 'Gaussian' else np.dot(newZ, newZ)
                 u = meanInnerProductX[i]
                 w = np.max(u / K, 0)
                 incrementSetValue = -0.5 * K * (w ** 2) + (u * w)
@@ -279,7 +275,7 @@ def HeuristicSetSelection(X, Y, m, kernelType, sigma):
         currSetValue = newCurrSetValue
 
         setValues[sizeS] = currSetValue
-        sizeS = sizeS + 1
+        sizeS += 1
 
     return(currOptw, S, setValues)
 

@@ -40,7 +40,7 @@ class TEDDataset():
                 '..', 'data','ted_data')
 
 
-    def load_file(self, fileName='Retention.csv') :
+    def load_file(self, fileName='Retention.csv'):
         """ Open dataset file and populate X, Y, and E
 
         Args:
@@ -69,5 +69,5 @@ class TEDDataset():
             return X, Y, E
 
         except IOError as err:
-            print("IOError: {}".format(err))
+            print(f"IOError: {err}")
             sys.exit(1)

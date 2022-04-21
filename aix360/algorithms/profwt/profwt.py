@@ -112,9 +112,9 @@ class ProfweightExplainer(GlobalWBExplainer):
             assert hps.checkpoint_path is not None, "Checkpoint to save Model not specified"
             checkpoint = ModelCheckpoint(filepath=hps.checkpoint_path,monitor='val_acc',verbose=1,save_best_only=True)
             assert hps.lr_scheduler is not None, "Learning Rate Scheduler not specified"
-            callbacks=callbacks+[checkpoint,hps.lr_scheduler]
+            callbacks += [checkpoint,hps.lr_scheduler]
             if hasattr(hps,'lr_reducer'):
-                callbacks=callbacks+[hps.lr_reducer]
+                callbacks += [hps.lr_reducer]
             assert hasattr(model_d,'fit'), "Model supplied needs a fit function"
             if sample_weight is not None:
                 model_d.fit(x_train, y_train,batch_size=hps.batch_size,epochs=hps.epochs,validation_data=(x_test[0:500,:], y_test[0:500,:]),shuffle=True,callbacks=callbacks,sample_weight=sample_weight)

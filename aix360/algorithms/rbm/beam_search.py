@@ -64,7 +64,7 @@ def beam_search_K1(r, X, lambda0, lambda1, UB=0, D=10, B=5, wLB=0.5, eps=1e-6, s
     Xp = 1 - X.loc[r > 0]
     Xn = 1 - X.loc[r < 0]
     instCurr = [PricingInstance(rp, rn, Xp, Xn, r.sum() + lambda0, pd.Series(0, index=zOut.index))]
-    
+
     # Iterate over increasing degree while queue is non-empty
     deg = 0
     while (not len(vOut) or not stopEarly) and len(instCurr) and deg < D:
@@ -76,7 +76,7 @@ def beam_search_K1(r, X, lambda0, lambda1, UB=0, D=10, B=5, wLB=0.5, eps=1e-6, s
         zNext = pd.DataFrame([], index=X.columns)
         idxInstNext = np.array([], dtype=int)
         idxFeatNext = np.array([])
-        
+
         # Process instances in queue
         for (idxInst, inst) in enumerate(instCurr):
 
@@ -92,7 +92,7 @@ def beam_search_K1(r, X, lambda0, lambda1, UB=0, D=10, B=5, wLB=0.5, eps=1e-6, s
                 vOut = np.array([UB])
                 zOut = inst.z0.copy()
                 zOut[idxMin] = 1
-                
+
             # Compute lower bounds on higher-degree solutions
             inst.compute_LB(lambda1)    
             # Evaluate children using weighted average of their costs and LBs
@@ -104,7 +104,7 @@ def beam_search_K1(r, X, lambda0, lambda1, UB=0, D=10, B=5, wLB=0.5, eps=1e-6, s
                 # Feature indicators of these best children
                 zChild = pd.DataFrame(zOut.index.values[:,np.newaxis] == vChild.index.values, index=zOut.index).astype(int)
                 zChild = zChild.add(inst.z0, axis=0)
-                
+
                 # Append to current candidates
                 vNext = np.append(vNext, vChild.values)
                 zNext = pd.concat([zNext, zChild], axis=1, ignore_index=True)
@@ -125,7 +125,7 @@ def beam_search_K1(r, X, lambda0, lambda1, UB=0, D=10, B=5, wLB=0.5, eps=1e-6, s
                 zNext.columns = range(zNext.shape[1])
                 idxInstNext = idxInstNext[idxBest]
                 idxFeatNext = idxFeatNext[idxBest]
-                
+
         # Instances to process in next iteration
         instNext = []
         for (idxInst, i, idxz) in zip(idxInstNext, idxFeatNext, zNext):
@@ -153,15 +153,11 @@ def beam_search_K1(r, X, lambda0, lambda1, UB=0, D=10, B=5, wLB=0.5, eps=1e-6, s
             instNext.append(PricingInstance(rp, rn, Xp, Xn, instCurr[idxInst].v1[i], zNext[idxz]))
 
         instCurr = instNext
-        
-    # Conjunctions corresponding to solutions
-    if zOut.count():
-        zOut = pd.DataFrame(zOut)
-    else:
-        zOut = pd.DataFrame(index=X.columns)
 
+    # Conjunctions corresponding to solutions
+    zOut = pd.DataFrame(zOut) if zOut.count() else pd.DataFrame(index=X.columns)
     aOut = 1 - (np.dot(1 - X, zOut) > 0)
-    
+
     return vOut, zOut, aOut
 
 

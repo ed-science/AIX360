@@ -157,7 +157,6 @@ class LinearRuleRegression(object):
             if self.useOrd:
                 # Nonzero indices of standardized and rule features
                 self.idxNonzeroOrd = idxNonzero[idxNonzero < numOrd]
-                nnzOrd = len(self.idxNonzeroOrd)
                 idxNonzeroRules = idxNonzero[idxNonzero >= numOrd] - numOrd
                 if self.debias and len(idxNonzero):
                     # Re-fit Lasso model with effectively no regularization
@@ -166,12 +165,12 @@ class LinearRuleRegression(object):
                     lr = Ridge(alpha=self.eps)
                     lr.fit(B[:,idxNonzero], y)
                     idxNonzero = np.where(np.abs(lr.coef_) > self.eps)[0]
+                    nnzOrd = len(self.idxNonzeroOrd)
                     # Nonzero indices of standardized and rule features
                     idxNonzeroOrd2 = idxNonzero[idxNonzero < nnzOrd]
                     self.idxNonzeroOrd = self.idxNonzeroOrd[idxNonzeroOrd2]
                     idxNonzeroRules = idxNonzero[idxNonzero >= nnzOrd] - nnzOrd
                 self.z = z.iloc[:,idxNonzeroRules]
-                lr.coef_ = lr.coef_[idxNonzero]
             else:
                 if self.debias and len(idxNonzero):
                     # Re-fit Lasso model with effectively no regularization
@@ -181,7 +180,7 @@ class LinearRuleRegression(object):
                     lr.fit(A[:,idxNonzero], y)
                     idxNonzero = np.where(np.abs(lr.coef_) > self.eps)[0]
                 self.z = z.iloc[:,idxNonzero]
-                lr.coef_ = lr.coef_[idxNonzero]
+            lr.coef_ = lr.coef_[idxNonzero]
         except AttributeError:
             # Model has no coefficients except intercept
             self.z = z
@@ -213,20 +212,18 @@ class LinearRuleRegression(object):
         Returns:
             array: yhat -- Predicted responses
         """
-        if len(self.lr.coef_):
-            # Compute conjunctions of features
-            A = self.compute_conjunctions(X)
-            if self.useOrd:
-                # Selected ordinal features scaled as in training
-                Astd = 0.4 * Xstd.values[:,self.idxNonzeroOrd]
-                # Predict probabilities
-                B = np.concatenate((Astd, A), axis=1)
-                return self.lr.predict(B)
-            else:
-                # Predict labels
-                return self.lr.predict(A)
-        else:
+        if not len(self.lr.coef_):
             return np.full(X.shape[0], self.mu)
+        # Compute conjunctions of features
+        A = self.compute_conjunctions(X)
+        if not self.useOrd:
+            # Predict labels
+            return self.lr.predict(A)
+        # Selected ordinal features scaled as in training
+        Astd = 0.4 * Xstd.values[:,self.idxNonzeroOrd]
+        # Predict probabilities
+        B = np.concatenate((Astd, A), axis=1)
+        return self.lr.predict(B)
 
     def explain(self, maxCoeffs=None, highDegOnly=False, prec=2):
         """Return DataFrame holding model features and their coefficients.
@@ -239,10 +236,7 @@ class LinearRuleRegression(object):
             DataFrame: dfExpl -- Rules/numerical features and their coefficients
         """
         # Number of ordinal features used
-        if self.useOrd:
-            nnzOrd = len(self.idxNonzeroOrd)
-        else:
-            nnzOrd = 0
+        nnzOrd = len(self.idxNonzeroOrd) if self.useOrd else 0
         if highDegOnly:
             # Restrict to higher-degree rules
             coeffs = self.lr.coef_[nnzOrd:][self.z.sum() > 1]
