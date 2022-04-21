@@ -42,18 +42,31 @@ class MNISTDataset():
                  "train-labels-idx1-ubyte.gz",
                  "t10k-labels-idx1-ubyte.gz"]
         for name in files:
-            if not os.path.exists(self._dirpath + "/" + name):
+            if not os.path.exists(f"{self._dirpath}/{name}"):
                 print("retrieving file", name)
-                urllib.request.urlretrieve('http://yann.lecun.com/exdb/mnist/' + name, self._dirpath + "/" + name)
+                urllib.request.urlretrieve(
+                    f'http://yann.lecun.com/exdb/mnist/{name}',
+                    f"{self._dirpath}/{name}",
+                )
+
                 print("retrieved")
 
-        train_data       = extract_data(self._dirpath + "/train-images-idx3-ubyte.gz", 60000)
-        train_labels     = extract_labels(self._dirpath + "/train-labels-idx1-ubyte.gz", 60000)
-        self.test_data   = extract_data(self._dirpath + "/t10k-images-idx3-ubyte.gz", 10000)
-        self.test_labels = extract_labels(self._dirpath + "/t10k-labels-idx1-ubyte.gz", 10000)
-        
+        train_data = extract_data(f"{self._dirpath}/train-images-idx3-ubyte.gz", 60000)
+        train_labels = extract_labels(
+            f"{self._dirpath}/train-labels-idx1-ubyte.gz", 60000
+        )
+
+        self.test_data = extract_data(
+            f"{self._dirpath}/t10k-images-idx3-ubyte.gz", 10000
+        )
+
+        self.test_labels = extract_labels(
+            f"{self._dirpath}/t10k-labels-idx1-ubyte.gz", 10000
+        )
+
+
         VALIDATION_SIZE = 5000
-        
+
         self.validation_data = train_data[:VALIDATION_SIZE, :, :, :]
         self.validation_labels = train_labels[:VALIDATION_SIZE]
         self.train_data = train_data[VALIDATION_SIZE:, :, :, :]

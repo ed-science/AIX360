@@ -24,19 +24,23 @@ from tensorflow.contrib.keras.api.keras.optimizers import SGD
 
 def load_AE(codec_prefix, print_summary=False):
 
-    saveFilePrefix = "models/AE_codec/" + codec_prefix + "_"
+    saveFilePrefix = f"models/AE_codec/{codec_prefix}_"
 
-    decoder_model_filename = saveFilePrefix + "decoder.json"
-    decoder_weight_filename = saveFilePrefix + "decoder.h5"
+    decoder_model_filename = f"{saveFilePrefix}decoder.json"
+    decoder_weight_filename = f"{saveFilePrefix}decoder.h5"
 
     if not os.path.isfile(decoder_model_filename):
-        raise Exception("The file for decoder model does not exist:{}".format(decoder_model_filename))
-    json_file = open(decoder_model_filename, 'r')
-    decoder = model_from_json(json_file.read(), custom_objects={"tf": tf})
-    json_file.close()
+        raise Exception(
+            f"The file for decoder model does not exist:{decoder_model_filename}"
+        )
 
+    with open(decoder_model_filename, 'r') as json_file:
+        decoder = model_from_json(json_file.read(), custom_objects={"tf": tf})
     if not os.path.isfile(decoder_weight_filename):
-        raise Exception("The file for decoder weights does not exist:{}".format(decoder_weight_filename))
+        raise Exception(
+            f"The file for decoder weights does not exist:{decoder_weight_filename}"
+        )
+
     decoder.load_weights(decoder_weight_filename)
 
     if print_summary:
@@ -50,7 +54,7 @@ class CELEBAModel:
         self.image_size = 224
         self.num_channels = 3
         self.num_labels = 8
-    
+
         input_layer = Input(shape=(self.image_size, self.image_size, self.num_channels))
         weights = "imagenet" if use_imagenet_pretrain else None
         if nn_type == "resnet50":
@@ -68,15 +72,15 @@ class CELEBAModel:
         if use_softmax:
             x = Activation("softmax")(x)
         model = Model(inputs=base_model.input, outputs=x)
-    
+
         # for layer in base_model.layers:
         # 	layer.trainable = False
-    
-    
+
+
         if restore:
-            print("Load: {}".format(restore))
+            print(f"Load: {restore}")
             model.load_weights(restore)
-    
+
         self.model = model
     
     def predict(self, data):

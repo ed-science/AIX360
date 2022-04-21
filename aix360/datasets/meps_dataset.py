@@ -73,7 +73,7 @@ class MEPSDataset():
         try:
             df = pd.read_csv(self._filepath, sep=',', na_values=[])
         except IOError as err:
-            print("IOError: {}".format(err))
+            print(f"IOError: {err}")
             print("To use this class, please place the heloc_dataset.csv:")
             print("file, as-is, in the folder:")
             print("\n\t{}\n".format(os.path.abspath(os.path.join(

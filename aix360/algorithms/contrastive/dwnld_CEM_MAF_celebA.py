@@ -23,30 +23,31 @@ class dwnld_CEM_MAF_celebA():
 
         # This is the link where attribute functions are stored
         cdcweb = 'http://aix360.mybluemix.net/static/CEM-MAF/attr_model/'
-    
+
         # Next build list of files to download
         cdcfiles = []
         for attr in attributes:
-            cdcfiles.append('simple_'+attr+'.ckpt')
-            cdcfiles.append('simple_'+attr+'_model.json')
-            cdcfiles.append('simple_'+attr+'_weights.h5')
-        
+            cdcfiles.extend(
+                (
+                    f'simple_{attr}.ckpt',
+                    f'simple_{attr}_model.json',
+                    f'simple_{attr}_weights.h5',
+                )
+            )
+
         files = []
-        
+
         for f in cdcfiles:
             file = requests.get(os.path.join(cdcweb, f), allow_redirects=True)
             open(os.path.join(local_path, f), 'wb').write(file.content)
-        
+
         # r=root, d=directories, f = files
         for r, d, f in os.walk(local_path):
             for attr in attributes:
-                for file in f:
-                    if attr in file:
-                        files.append(os.path.join(r, file))
-        
+                files.extend(os.path.join(r, file) for file in f if attr in file)
         print('Attribute files downloaded:')
         print(files)
-        
+
         return files
         
     def dwnld_celebA_model(self, local_path):
@@ -62,21 +63,18 @@ class dwnld_CEM_MAF_celebA():
 
         # This is the link where the celebA model is stored
         cdcweb = 'http://aix360.mybluemix.net/static/CEM-MAF/celebA'
-    
+
         files = []
-        
+
         file = requests.get(cdcweb, allow_redirects=True)
         open(os.path.join(local_path, 'celebA'), 'wb').write(file.content)
-        
+
         # r=root, d=directories, f = files
         for r, d, f in os.walk(local_path):
-            for file in f:
-                if 'celebA' == file:
-                    files.append(os.path.join(r, file))
-        
+            files.extend(os.path.join(r, file) for file in f if file == 'celebA')
         print('celebA model file downloaded:')
         print(files)
- 
+
         return files
  
     def dwnld_celebA_data(self, local_path, ids):
@@ -93,30 +91,32 @@ class dwnld_CEM_MAF_celebA():
 
         # This is the link where celebA image data is stored
         cdcweb = 'http://aix360.mybluemix.net/static/CEM-MAF/data/'
-    
+
         # Next build list of files to download
         cdcfiles = []
         for id in ids:
-            cdcfiles.append(str(id)+'_img.npy')
-            cdcfiles.append(str(id)+'_latent.npy')
-            cdcfiles.append(str(id)+'img.png')        
+            cdcfiles.extend(
+                (
+                    f'{str(id)}_img.npy',
+                    f'{str(id)}_latent.npy',
+                    f'{str(id)}img.png',
+                )
+            )
+
         files = []
-        
+
         if not os.path.exists(local_path):
             os.makedirs(local_path)
 
         for f in cdcfiles:
             file = requests.get(os.path.join(cdcweb, f), allow_redirects=True)
             open(os.path.join(local_path, f), 'wb').write(file.content)
-        
+
         # r=root, d=directories, f = files
         for r, d, f in os.walk(local_path):
             for id in ids:
-                for file in f:
-                    if str(id) in file:
-                        files.append(os.path.join(r, file))
-        
+                files.extend(os.path.join(r, file) for file in f if str(id) in file)
         print('Image files downloaded:')
         print(files)
-        
+
         return files

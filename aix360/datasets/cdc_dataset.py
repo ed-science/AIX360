@@ -39,11 +39,11 @@ class CDCDataset():
             try:
                 filename = os.path.join(self._dirpath, f)
                 if not os.path.exists(filename):
-                    print("Downloading file {}".format(f))
+                    print(f"Downloading file {f}")
                     file = requests.get(os.path.join(self._cdcweb, f), allow_redirects=True)
                     open(filename, 'wb').write(file.content)
             except IOError as err:
-                print("IOError: {}".format(err))
+                print(f"IOError: {err}")
                 sys.exit(1)
 
         self._convert_xpt_to_csv()

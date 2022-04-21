@@ -96,7 +96,7 @@ class CEMExplainer(LocalWBExplainer):
 
         _, delta_class, delta_prob_str = self._wbmodel.predict_long(delta_X)
 
-        INFO = "[INFO]kappa:{}, Orig class:{}, Perturbed class:{}, Delta class: {}, Orig prob:{}, Perturbed prob:{}, Delta prob:{}".format(
-            arg_kappa, orig_class, adv_class, delta_class, orig_prob_str, adv_prob_str, delta_prob_str)
+        INFO = f"[INFO]kappa:{arg_kappa}, Orig class:{orig_class}, Perturbed class:{adv_class}, Delta class: {delta_class}, Orig prob:{orig_prob_str}, Perturbed prob:{adv_prob_str}, Delta prob:{delta_prob_str}"
+
 
         return (adv_X, delta_X, INFO)

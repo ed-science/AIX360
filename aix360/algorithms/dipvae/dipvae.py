@@ -95,16 +95,9 @@ class DIPVAEExplainer(DIExplainer):
         """
 
         reference_z, reference_mu, reference_std = self.net.encode(input_images)
-        if edit_z_sample:
-            edited_z = reference_z
-            edited_z[:,edit_dim_id] = edit_dim_value
-        else:
-            edited_z = reference_mu
-            edited_z[:, edit_dim_id] = edit_dim_value
-
-        edited_images = self.net.decode(edited_z)
-
-        return edited_images
+        edited_z = reference_z if edit_z_sample else reference_mu
+        edited_z[:,edit_dim_id] = edit_dim_value
+        return self.net.decode(edited_z)
 
     def fit(self, visualize=False, save_dir="results"):
         """
@@ -126,26 +119,26 @@ class DIPVAEExplainer(DIExplainer):
         for epoch in np.arange(self.model_args.num_epochs):
 
             loss_epoch = 0.
-            batch_id = 0
-
-            for x, y in self.dataset.next_batch():
+            for batch_id, (x, y) in enumerate(self.dataset.next_batch(), start=1):
                 #x, y = torch.tensor(x), torch.tensor(y)
                 if self.cuda_available:
                     x = x.cuda()
                     y = y.cuda()
 
                 # forward
-                if "mnist" in self.dataset.name:
-                    loss = self.net.neg_elbo(x.squeeze().view(-1, np.prod(self.dataset.data_dims)))
-                else:
-                    loss = self.net.neg_elbo(x)
+                loss = (
+                    self.net.neg_elbo(
+                        x.squeeze().view(-1, np.prod(self.dataset.data_dims))
+                    )
+                    if "mnist" in self.dataset.name
+                    else self.net.neg_elbo(x)
+                )
+
                 # backward
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
                 loss_epoch += loss
-
-                batch_id += 1
 
                 if visualize and batch_id % 10 == 0:
 

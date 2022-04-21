@@ -133,25 +133,25 @@ def printFeatureStringHeader() :
     print("     Feature Headings")
     print("[Pos, Org, Pot, Rating, Slope, Salary Competitiveness, Tenure, Position Tenure]")
          
-def featuresToString(featureVector) :
+def featuresToString(featureVector):
     """ Convert a feature vector into is string format"""
     val = "["
-    for i in range(0, 2) :   # These features are just ints, Position, Organization
+    for i in range(2):   # These features are just ints, Position, Organization
         val += str(featureVector[i])
-        val += " "           
+        val += " "
     for i in range(2, 6) :   # show encoding for these: Potential, Rating, Rating Slope, Salary Competiveness
         val += ruleValToString(featureVector[i]) 
         val += " "
     for i in range(6, 8) :   # These features are just ints: Tenure and Position Tenure
         val += str(featureVector[i])
-        val += " "           
+        val += " "
     val += "]"
     return val
 
-def printRule(rule) :
+def printRule(rule):
     """ Print the passed rule """
     print("Rule: ", end='')
-    for i in rule[0:1]:   # ints or Any: Position and Organization
+    for i in rule[:1]:   # ints or Any: Position and Organization
         if i == Any:
            print(ruleValToString(i) + ", ", end='')
 
@@ -159,10 +159,10 @@ def printRule(rule) :
         print(ruleValToString(i) + ", ", end='')
 
     for i in rule[6:9]:   # next 4 are ints or ANY: Tenure Low, Tenure High, Position Tenure Low, Position Tenure High
-        if i == Any :
+        if i == Any:
             print(ruleValToString(i) + ", ", end='')
-        else :
-            print(str(i) + ", ", end='')       
+        else:
+            print(f"{str(i)}, ", end='')
     print("==> "+ ruleValToString(rule[10]) + "[" + str(rule[11]) + "] " + str(rule[12]))
 
 def printRules(rules) :
@@ -204,7 +204,7 @@ def chooseValueAndAppend(instance, population, weights) :
     val = choices(population, weights)
     instance.append(val[0])
 
-def generateFeatures(numInstances) :
+def generateFeatures(numInstances):
     """ generate the features (X) values for the dataset
     Args:
         numInstances (int) : number of instances to genreate
@@ -214,7 +214,7 @@ def generateFeatures(numInstances) :
     assert(numInstances > 0)
 
     dataset = []
-    for i in range(numInstances) :
+    for _ in range(numInstances):
         instance = []
 
         #POS  ORG    Pot  Rating Slope  SALC  TENL H       BTEN LH  
@@ -234,21 +234,19 @@ def generateFeatures(numInstances) :
             val2 = val1
         instance.append(val2)
         dataset.append(instance)
-    
+
     return dataset
 
 #####################################################################################################
 
-def match(ruleVal, featureVal) :
+def match(ruleVal, featureVal):
     """ Check if passed ruleVal matches the featureVal or if ruleVal is Any, which matches everything 
     """
 
     # print("Match called: "+ ruleValToString(ruleVal) + " " + ruleValToString(featureVal))
-    if ruleVal == Any :
-        return True
-    return (ruleVal == featureVal)
+    return True if ruleVal == Any else (ruleVal == featureVal)
 
-def intervalMatch(ruleValLower, ruleValUpper, featureVal) :
+def intervalMatch(ruleValLower, ruleValUpper, featureVal):
     """ Check to see if featureVal is in the interval defined by [ruleValLower, ruleValUpper)
     """
 
@@ -256,26 +254,21 @@ def intervalMatch(ruleValLower, ruleValUpper, featureVal) :
     if ruleValLower == Any :
         return True
 
-    if ruleValLower <= featureVal :
-        # Any in upper bound means infinitity
-        if featureVal < ruleValUpper or ruleValUpper == Any :
-            return True
-    
+    if ruleValLower <= featureVal and (
+        featureVal < ruleValUpper or ruleValUpper == Any
+    ):
+        return True
+
     return False
 
-def ruleMatch(rule, featureVector) :
+def ruleMatch(rule, featureVector):
     """  Determine if the passed featureVector matches the passed rule 
     """
-    if (False) :
-        print("ruleMatch called, ", end="")
-        printRule(rule)
-        print(" feature vector: " + featuresToString(featureVector) )
-
-    for i in range(0, 6) :            # loop over first 6 features, 0..5
+    for i in range(6):            # loop over first 6 features, 0..5
         if not match(rule[i], featureVector[i]) :   # if we don't find a feature match, the rule doesn't match
             # print("Didn't match feature #", i, ruleValToString(featureVector[i]))
             return False
-    
+
     # These features are interval-based, so need a different matching routine
     if not intervalMatch(rule[6], rule[7], featureVector[6]) :  # rule[6] and rule[7] have the lower and upper bounds of interval
         # print("Didn't match feature # 6: ", featureVector[6])
@@ -283,40 +276,26 @@ def ruleMatch(rule, featureVector) :
     if not intervalMatch(rule[8], rule[9], featureVector[7]) :  # rule[8] and rule[9] have the lower and upper bounds of interval
         # print("Didn't match feature # 7: ", featureVector[7])
         return False
-   
+
     # print("Matched all features")
     return True                                     # if we didn't find a non-match by now, we found a match
 
-def findRule(instance, ruleSet) :
+def findRule(instance, ruleSet):
     """ find the rule(s) that matches the feture vector passed
     """
 
-    # print("*Looking for rule match for Feature vector: " + featuresToString(instance))
-    ruleNumber = 0      # counter to track rule number
     ruleMatches = []    # will hold all rule numbers that matched
-    for rule in ruleSet :
-        if (ruleMatch(rule, instance)) :
+    for ruleNumber, rule in enumerate(ruleSet):
+        if (ruleMatch(rule, instance)):
             ruleMatches.append(ruleNumber)
             counts[ruleNumber] += 1               # update global histogram of rule matches for stats reporting
 
-            if (False) :
-                print(" ruleMatch found at rule #" + str(ruleNumber))
-                print(" ", end="")
-                printRule(rule)
-
-        ruleNumber += 1
-
     return ruleMatches
 
-def countAnys(rule) :
+def countAnys(rule):
     """ Count the number of Anys in the passed rule.  An "Any" is a wildcard that matches all values
     """
-    count = 0
-    for feature in RetentionRules[rule] :
-        if feature == Any :
-            count += 1
-
-    return count
+    return sum(feature == Any for feature in RetentionRules[rule])
 
 def pickBestRule(ruleList) :
     """ Choose the rule with the least number of Any's in it
@@ -336,7 +315,7 @@ def pickBestRule(ruleList) :
     assert(bestRule != -1)     # We should find a best rule
     return bestRule
 
-def addLabelsAndExplanations(dataset, rules) :
+def addLabelsAndExplanations(dataset, rules):
     """ This function will use a ruleset to add labels (Y) and explanations/rules (E) to a passed dataset
     Arg:
         dataset (list of lists) : a list of feature vectors (list)
@@ -369,21 +348,18 @@ def addLabelsAndExplanations(dataset, rules) :
         instance.append(label)
         instance.append(rule)   # add the label and explanation (rule #) to the featureVector
 
-    if (True) :
-        print("\nRule matching statistics: ")
-        totalYes = oneMatches + multiMatches
-        total = oneMatches + multiMatches + noMatches
-        print("  Yes Labels: {}/{} ({:.2f}%)".format(totalYes, total, totalYes/total*100))
-        print("    Matched 1 Yes rule: {}/{} ({:.2f}%)".format(oneMatches, totalYes, oneMatches/totalYes*100))
-        print("    Matched multiple Yes rules: {}/{} ({:.2f}%)".format(multiMatches, totalYes, multiMatches/totalYes*100))
-        print("  No Laels: {}/{} ({:.2f}%)".format(noMatches, total, noMatches/total*100))
+    print("\nRule matching statistics: ")
+    totalYes = oneMatches + multiMatches
+    total = oneMatches + multiMatches + noMatches
+    print("  Yes Labels: {}/{} ({:.2f}%)".format(totalYes, total, totalYes/total*100))
+    print("    Matched 1 Yes rule: {}/{} ({:.2f}%)".format(oneMatches, totalYes, oneMatches/totalYes*100))
+    print("    Matched multiple Yes rules: {}/{} ({:.2f}%)".format(multiMatches, totalYes, multiMatches/totalYes*100))
+    print("  No Laels: {}/{} ({:.2f}%)".format(noMatches, total, noMatches/total*100))
 
-def printRuleUsage(counts, total) :
+def printRuleUsage(counts, total):
     print("\nHistogram of rule usage:")
-    ruleNum = 0
-    for num in counts :
+    for ruleNum, num in enumerate(counts):
         print(" Rule {} was used {} times, {:.2f}%".format(ruleNum, num, num/total*100))
-        ruleNum += 1
 
         
 numRentionRules = len(RetentionRules)
@@ -402,8 +378,7 @@ printRuleUsage(counts, numInstances)
 # insert TED headers
 NumFeatures = len(featureThresholds)
 header = list(range(NumFeatures))
-header.append("Y")
-header.append("E")
+header.extend(("Y", "E"))
 dataset.insert(0, header)
 
 # write to csv file

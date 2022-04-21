@@ -2,10 +2,7 @@ import abc
 import sys
 
 # Ensure compatibility with Python 2/3
-if sys.version_info >= (3, 4):
-    ABC = abc.ABC
-else:
-    ABC = abc.ABCMeta(str('ABC'), (), {})
+ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta('ABC', (), {})
 
 
 class GlobalWBExplainer(ABC):

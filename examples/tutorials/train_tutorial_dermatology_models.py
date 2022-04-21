@@ -112,13 +112,15 @@ class ConvEncNet(nn.Module):
         self.conv_var = nn.Conv2d(num_filters * 2 ** (num_layers - 3), latent_dim, 4)
 
         for m in self.modules():
-            if isinstance(m, nn.Conv2d):
+            if (
+                isinstance(m, nn.Conv2d)
+                or not isinstance(m, nn.BatchNorm2d)
+                and isinstance(m, nn.Linear)
+            ):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
 
     def forward(self, x):
         x = self.conv1(x)
@@ -162,13 +164,15 @@ class ConvDecNet(nn.Module):
         self.deconv_out = nn.ConvTranspose2d(num_filters, num_channels, 4, 2,1, bias=True)
 
         for m in self.modules():
-            if isinstance(m, nn.Conv2d):
+            if (
+                isinstance(m, nn.Conv2d)
+                or not isinstance(m, nn.BatchNorm2d)
+                and isinstance(m, nn.Linear)
+            ):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
-            elif isinstance(m, nn.Linear):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
 
     def forward(self, x):
         x = x.unsqueeze(-1).unsqueeze(-1)
@@ -205,7 +209,7 @@ if __name__ == '__main__':
     import argparse
 
     cuda_available = torch.cuda.is_available()
-    print("CUDA: {}".format(cuda_available))
+    print(f"CUDA: {cuda_available}")
 
     dataset_obj = ISICDataset(root_images_path='./data/Task3/ISIC2018_Task3_Training_Input/',
                               file_path_labels='./data/Task3/ISIC2018_Task3_Training_GroundTruth/'

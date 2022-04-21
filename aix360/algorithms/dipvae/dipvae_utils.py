@@ -38,7 +38,10 @@ def plot_reconstructions(dataset_obj, trained_net, input_images, image_id_to_plo
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
 
-    f.savefig(os.path.join(save_dir, 'recons_epoch_{}_batch_id_{}.png'.format(epoch, batch_id)))
+    f.savefig(
+        os.path.join(save_dir, f'recons_epoch_{epoch}_batch_id_{batch_id}.png')
+    )
+
     plt.close(fig=f)
 
 
@@ -61,9 +64,9 @@ def plot_latent_traversal(explainer, input_images, args, dataset_obj, image_id_t
                 axarr[i][j].imshow(edited_images[image_id_to_plot]*0.5 + 0.5, aspect='auto')
             #axarr[j][i].axis('off')
             if i == len(axarr) - 1:
-                axarr[i][j].set_xlabel("z:" + str(np.round(edit_dim_values[j], 1)))
+                axarr[i][j].set_xlabel(f"z:{str(np.round(edit_dim_values[j], 1))}")
             if j == 0:
-                axarr[i][j].set_ylabel("l:" + str(i))
+                axarr[i][j].set_ylabel(f"l:{str(i)}")
             axarr[i][j].set_yticks([])
             axarr[i][j].set_xticks([])
     plt.subplots_adjust(hspace=0, wspace=0)
@@ -71,7 +74,12 @@ def plot_latent_traversal(explainer, input_images, args, dataset_obj, image_id_t
     if not os.path.isdir(save_dir):
         os.makedirs(save_dir)
 
-    f.savefig(os.path.join(save_dir, 'traversal_epoch_{}_batch_id_{}.png'.format(epoch, batch_id)))
+    f.savefig(
+        os.path.join(
+            save_dir, f'traversal_epoch_{epoch}_batch_id_{batch_id}.png'
+        )
+    )
+
     plt.close(fig=f)
 
 
@@ -96,10 +104,7 @@ def bernoulli_likelihood(x, x_pred, dim=None):
     lik = td.Bernoulli(probs=x_pred).log_prob(x)
     if torch.isnan(lik.sum()):
         print (lik.sum())
-    if dim:
-        return lik.sum(dim=dim)
-    else:
-        return lik.sum()
+    return lik.sum(dim=dim) if dim else lik.sum()
 
 
 def gaussian_likelihood(x, x_pred):

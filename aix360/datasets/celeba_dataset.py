@@ -23,7 +23,9 @@ class CelebADataset():
                 '..', 'data','celeba_data')
 
     def get_img(self, img_id):
-        return np.load(os.path.join(self._dirpath, "{}_img.npy".format(img_id)))
+        return np.load(os.path.join(self._dirpath, f"{img_id}_img.npy"))
 
     def get_latent(self, img_id):
-        return np.load(os.path.join(self._dirpath, "{}_latent.npy".format(img_id))).astype("float32")
+        return np.load(os.path.join(self._dirpath, f"{img_id}_latent.npy")).astype(
+            "float32"
+        )

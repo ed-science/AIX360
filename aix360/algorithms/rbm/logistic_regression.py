@@ -178,7 +178,6 @@ class LogisticRuleRegression(object):
             if self.useOrd:
                 # Nonzero indices of standardized and rule features
                 self.idxNonzeroOrd = idxNonzero[idxNonzero < numOrd]
-                nnzOrd = len(self.idxNonzeroOrd)
                 idxNonzeroRules = idxNonzero[idxNonzero >= numOrd] - numOrd
                 if self.debias and len(idxNonzero):
                     # Re-fit logistic regression model with effectively no regularization
@@ -186,12 +185,12 @@ class LogisticRuleRegression(object):
                     lr.C = 1 / self.eps
                     lr.fit(B[:,idxNonzero], y)
                     idxNonzero = np.where(np.abs(lr.coef_) > self.eps)[1]
+                    nnzOrd = len(self.idxNonzeroOrd)
                     # Nonzero indices of standardized and rule features
                     idxNonzeroOrd2 = idxNonzero[idxNonzero < nnzOrd]
                     self.idxNonzeroOrd = self.idxNonzeroOrd[idxNonzeroOrd2]
                     idxNonzeroRules = idxNonzero[idxNonzero >= nnzOrd] - nnzOrd
                 self.z = z.iloc[:,idxNonzeroRules]
-                lr.coef_ = lr.coef_[:,idxNonzero]
             else:
                 if self.debias and len(idxNonzero):
                     # Re-fit logistic regression model with effectively no regularization
@@ -200,7 +199,7 @@ class LogisticRuleRegression(object):
                     lr.fit(A[:,idxNonzero], y)
                     idxNonzero = np.where(np.abs(lr.coef_) > self.eps)[1]
                 self.z = z.iloc[:,idxNonzero]
-                lr.coef_ = lr.coef_[:,idxNonzero]
+            lr.coef_ = lr.coef_[:,idxNonzero]
         except AttributeError:
             # Model has no coefficients except intercept
             self.z = z
@@ -232,20 +231,18 @@ class LogisticRuleRegression(object):
             array: p -- Predicted probabilities
         """
         try:
-            if self.lr.coef_.shape[1]:
-                # Compute conjunctions of features
-                A = self.compute_conjunctions(X)
-                if self.useOrd:
-                    # Selected ordinal features scaled as in training
-                    Astd = 0.4 * Xstd.values[:,self.idxNonzeroOrd]
-                    # Predict probabilities
-                    B = np.concatenate((Astd, A), axis=1)
-                    return self.lr.predict_proba(B)[:,1]
-                else:
-                    # Predict probabilities
-                    return self.lr.predict_proba(A)[:,1]
-            else:
+            if not self.lr.coef_.shape[1]:
                 return np.full(X.shape[0], self.p)
+            # Compute conjunctions of features
+            A = self.compute_conjunctions(X)
+            if not self.useOrd:
+                # Predict probabilities
+                return self.lr.predict_proba(A)[:,1]
+            # Selected ordinal features scaled as in training
+            Astd = 0.4 * Xstd.values[:,self.idxNonzeroOrd]
+            # Predict probabilities
+            B = np.concatenate((Astd, A), axis=1)
+            return self.lr.predict_proba(B)[:,1]
         except AttributeError:
             return np.full(X.shape[0], self.p)
 
@@ -259,20 +256,18 @@ class LogisticRuleRegression(object):
             array: yhat -- Predicted labels
         """
         try:
-            if self.lr.coef_.shape[1]:
-                # Compute conjunctions of features
-                A = self.compute_conjunctions(X)
-                if self.useOrd:
-                    # Selected ordinal features scaled as in training
-                    Astd = 0.4 * Xstd.values[:,self.idxNonzeroOrd]
-                    # Predict probabilities
-                    B = np.concatenate((Astd, A), axis=1)
-                    return self.lr.predict(B)
-                else:
-                    # Predict labels
-                    return self.lr.predict(A)
-            else:
+            if not self.lr.coef_.shape[1]:
                 return np.full(X.shape[0], self.p > 0.5, dtype=int)
+            # Compute conjunctions of features
+            A = self.compute_conjunctions(X)
+            if not self.useOrd:
+                # Predict labels
+                return self.lr.predict(A)
+            # Selected ordinal features scaled as in training
+            Astd = 0.4 * Xstd.values[:,self.idxNonzeroOrd]
+            # Predict probabilities
+            B = np.concatenate((Astd, A), axis=1)
+            return self.lr.predict(B)
         except AttributeError:
             return np.full(X.shape[0], self.p > 0.5, dtype=int)
 
@@ -287,10 +282,7 @@ class LogisticRuleRegression(object):
             DataFrame: dfExpl -- Rules/numerical features and their coefficients
         """
         # Number of ordinal features used
-        if self.useOrd:
-            nnzOrd = len(self.idxNonzeroOrd)
-        else:
-            nnzOrd = 0
+        nnzOrd = len(self.idxNonzeroOrd) if self.useOrd else 0
         if highDegOnly:
             # Restrict to higher-degree rules
             coeffs = self.lr.coef_[0, nnzOrd:][self.z.sum() > 1]

@@ -21,7 +21,7 @@ def nan_preprocessing(df):
 
 def default_preprocessing(df):
     # Details and preprocessing for FICO dataset
-    x_cols, y_col = df.columns[0:-1], df.columns[-1]
+    x_cols, y_col = df.columns[:-1], df.columns[-1]
 
     # Preprocessing the HELOC dataset
     # Remove all the rows containing -9 in the ExternalRiskEstimate column
@@ -78,7 +78,7 @@ class HELOCDataset():
             #df = pd.read_csv(filepath)
             self._df = pd.read_csv(self._filepath)
         except IOError as err:
-            print("IOError: {}".format(err))
+            print(f"IOError: {err}")
             print("To use this class, please place the heloc_dataset.csv:")
             print("file, as-is, in the folder:")
             print("\n\t{}\n".format(os.path.abspath(os.path.join(

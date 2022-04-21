@@ -73,8 +73,10 @@ class BooleanRuleCG(object):
             BooleanRuleCG: Self
         """
         if not self.silent:
-            print('Learning {} rule with complexity parameters lambda0={}, lambda1={}'\
-                  .format('CNF' if self.CNF else 'DNF', self.lambda0, self.lambda1))
+            print(
+                f"Learning {'CNF' if self.CNF else 'DNF'} rule with complexity parameters lambda0={self.lambda0}, lambda1={self.lambda1}"
+            )
+
         if self.CNF:
             # Flip labels for CNF
             y = 1 - y
